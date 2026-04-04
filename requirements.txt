@@ -3,6 +3,5 @@ numpy
 scikit-learn
 xgboost
 matplotlib
-seaborn
 requests
 jupyter
