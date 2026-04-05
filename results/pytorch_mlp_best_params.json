@@ -1,0 +1,13 @@
+{
+  "hidden_dims": [
+    128,
+    64,
+    32
+  ],
+  "dropout": 0.2,
+  "lr": 0.0005,
+  "weight_decay": 0.0001,
+  "batch_size": 512,
+  "best_epoch": 8,
+  "best_val_rmse": 32.89245281441379
+}
