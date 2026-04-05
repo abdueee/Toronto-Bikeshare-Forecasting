@@ -1,0 +1,141 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title[Toronto Bikeshare Demand Forecasting]
+{Group 21}
+
+\subtitle{Toronto Bikeshare Demand Forecasting}
+
+\author[Group 21] 
+{Abdul Mohammed\inst{1} \and Axel Tang\inst{2} \and Esam Uddin\inst{3}}
+
+\institute[ ] % (optional)
+{
+  \inst{1}%
+  The Edward S. Rogers Sr. Department of Electrical and Computer Engineering
+}
+
+\date[IntroML] % (optional)
+{Introduction to Machine Learning -- Winter 2026}
+
+\logo{\includegraphics[height=0.8cm]{logo_uoft}}
+
+\definecolor{uoftblue}{RGB}{6,41,88}
+\setbeamercolor{titlelike}{bg=uoftblue}
+\setbeamerfont{title}{series=\bfseries}
+
+\begin{document}
+
+\frame{\titlepage}
+
+
+\begin{frame}
+\frametitle{Slide 1}
+\textbf{Project Overview}
+
+\begin{itemize}
+  \item Goal: forecast Toronto Bike Share demand at hourly resolution.
+  \item Data scope: 2025 to early 2026 ridership, station metadata, and hourly weather.
+  \item Core workflow: data cleaning $\rightarrow$ EDA $\rightarrow$ feature engineering $\rightarrow$ baseline model $\rightarrow$ tree-based models.
+  \item Evaluation focus: MAE, RMSE, and $R^2$ on held-out test period.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Slide 2}
+\textbf{Data Cleaning and Ingestion}
+
+\begin{itemize}
+  \item Merged monthly ridership files for 2025--2026.
+  \item Dropped rows with missing start station/time.
+  \item Filtered trip duration to \texttt{60--86400} seconds.
+  \item Aggregated to station-hour pickups and filled implicit zeros.
+  \item Cleaned station metadata: \textbf{1031 stations}.
+  \item Weather cleanup produced \textbf{0 nulls} in key columns.
+\end{itemize}
+
+\begin{block}{Output of This Stage}
+Prepared consistent modeling files in \texttt{data/processed/} (hourly demand, clusters, weather, train/val/test).
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Slide 3}
+\textbf{EDA Results}
+
+{\small
+\begin{itemize}
+  \item EDA showed strong zero inflation and clear seasonal/hourly structure.
+  \item Used K-means clustering with \textbf{$K=8$} for station grouping.
+  \item Diagnostics shown below: zeros, cluster geometry, seasonal demand, and hour-month patterns.
+\end{itemize}
+}
+
+\vspace{-0.10cm}
+
+\centering
+\includegraphics[width=0.23\linewidth]{results/eda_station_zeros.png}
+\hfill
+\includegraphics[width=0.23\linewidth]{results/eda_zero_comparison.png}
+\hfill
+\includegraphics[width=0.23\linewidth]{results/eda_elbow.png}
+
+\vspace{0.03cm}
+
+\includegraphics[width=0.23\linewidth]{results/eda_cluster_map.png}
+\hfill
+\includegraphics[width=0.23\linewidth]{results/eda_seasonal.png}
+\hfill
+\includegraphics[width=0.23\linewidth]{results/eda_heatmap.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{Slide 4}
+\textbf{Random Forest and XGBoost Results}
+
+\begin{columns}[T,onlytextwidth]
+\column{0.56\textwidth}
+{\tiny
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.05}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccc}
+\textbf{Model} & \textbf{MAE} & \textbf{$R^2$} & \textbf{RMSE} \\
+\hline
+Linear Regression & 11.1769 & 0.7083 & 33.0073 \\
+Random Forest (baseline) & 7.5952 & 0.8504 & 23.6354 \\
+Random Forest (tuned) & 7.4770 & 0.8529 & 23.4433 \\
+XGBoost (baseline) & 7.3418 & 0.8647 & 22.4805 \\
+XGBoost (tuned) & \textbf{7.1478} & \textbf{0.8701} & \textbf{22.0275} \\
+\end{tabular}
+}
+}
+
+\vspace{0.10cm}
+
+{\small
+\begin{itemize}
+  \item Best validation model: \textbf{XGBoost (tuned)}.
+  \item Best test model: \textbf{XGBoost (tuned)}.
+  \item Clear improvement over linear baseline on all three metrics.
+\end{itemize}
+}
+
+\column{0.42\textwidth}
+\IfFileExists{results/xgboost_tuned_pred_vs_actual.png}{
+  \centering
+  \includegraphics[width=0.80\linewidth,height=0.42\textheight,keepaspectratio]{results/xgboost_tuned_pred_vs_actual.png}
+}{
+  \centering
+  \fbox{\parbox[c][0.34\textheight][c]{0.80\linewidth}{\centering
+  Figure not found:\\
+  \texttt{results/xgboost\_tuned\_pred\_vs\_actual.png}}}
+}
+
+{\tiny XGBoost (tuned) predicted vs actual (test).}
+\end{columns}
+\end{frame}
+
+\end{document}
