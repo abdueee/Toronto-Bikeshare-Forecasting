@@ -31,65 +31,88 @@
 
 
 \begin{frame}
-\frametitle{Slide 1}
-\textbf{Project Overview}
+\frametitle{Project Overview}
 
 \begin{itemize}
-  \item Goal: forecast Toronto Bike Share demand at hourly resolution.
-  \item Data scope: 2025 to early 2026 ridership, station metadata, and hourly weather.
-  \item Core workflow: data cleaning $\rightarrow$ EDA $\rightarrow$ feature engineering $\rightarrow$ baseline model $\rightarrow$ tree-based models.
-  \item Evaluation focus: MAE, RMSE, and $R^2$ on held-out test period.
+  \item \textbf{Goal:} Forecast hourly bikeshare pickup demand across Toronto using ML models (Tabular and NNs).
+
+  \item \textbf{Data:} 12 months of ridership (Jan 2025 -- Feb 2026), station
+  metadata (GBFS), and hourly weather (Open-Meteo). Split chronologically:
+  train on 2025, validate on Jan 2026, test on Feb 2026.
+
+  \item \textbf{Key design choice:} K-means clustering ($K=8$) on station
+  coordinates reduces station-level zero inflation from \textbf{77.7\%} to
+  \textbf{37.3\%} at the cluster level, enabling meaningful demand signal.
+
+  \item \textbf{Model progression:} Linear Regression (baseline)
+  $\rightarrow$ Random Forest and XGBoost $\rightarrow$ PyTorch MLP, evaluated
+  on MAE, RMSE, and $R^2$.
+
+  \item \textbf{Best result:} XGBoost (tuned) achieves $R^2 = 0.87$,
+  MAE $= 7.15$ on the held-out test set.
 \end{itemize}
+
 \end{frame}
 
 
 \begin{frame}
-\frametitle{Slide 2}
-\textbf{Data Cleaning and Ingestion}
-
-\begin{itemize}
-  \item Merged monthly ridership files for 2025--2026.
-  \item Dropped rows with missing start station/time.
-  \item Filtered trip duration to \texttt{60--86400} seconds.
-  \item Aggregated to station-hour pickups and filled implicit zeros.
-  \item Cleaned station metadata: \textbf{1031 stations}.
-  \item Weather cleanup produced \textbf{0 nulls} in key columns.
-\end{itemize}
-
-\begin{block}{Output of This Stage}
-Prepared consistent modeling files in \texttt{data/processed/} (hourly demand, clusters, weather, train/val/test).
-\end{block}
-\end{frame}
-
-\begin{frame}
-\frametitle{Slide 3}
-\textbf{EDA Results}
+\frametitle{Data Pipeline, EDA, and Feature Engineering}
 
 {\small
 \begin{itemize}
-  \item EDA showed strong zero inflation and clear seasonal/hourly structure.
-  \item Used K-means clustering with \textbf{$K=8$} for station grouping.
-  \item Diagnostics shown below: zeros, cluster geometry, seasonal demand, and hour-month patterns.
+  \item \textbf{Ingestion \& Cleaning:} 12 monthly CSVs (Jan 2025 -- Feb 2026); trips filtered to 1 minute-- 24 hours; aggregated to station-hour pickups with implicit zeros filled.
+  \item \textbf{Zero Inflation:} 77.7\% of station-hours have zero pickups -- station-level granularity is too sparse for reliable learning.
+  \item \textbf{Clustering:} K-means ($K=8$) on station lat/lon groups 999 stations into 8 geographic clusters, cutting zero inflation to \textbf{37.3\%} and amplifying demand signal.
+  \item \textbf{Features \& Split:} 12 features (temporal, weather, \texttt{lag\_24h}); chronological split -- 2025 $\rightarrow$ train, Jan 2026 $\rightarrow$ val, Feb 2026 $\rightarrow$ test.
 \end{itemize}
 }
 
-\vspace{-0.10cm}
+\vspace{0.15cm}
 
 \centering
-\includegraphics[width=0.23\linewidth]{results/eda_station_zeros.png}
+\includegraphics[width=0.23\linewidth,height=0.38\textheight,keepaspectratio]{results/eda_zero_comparison.png}
 \hfill
-\includegraphics[width=0.23\linewidth]{results/eda_zero_comparison.png}
+\includegraphics[width=0.23\linewidth,height=0.38\textheight,keepaspectratio]{results/eda_cluster_map.png}
 \hfill
-\includegraphics[width=0.23\linewidth]{results/eda_elbow.png}
+\includegraphics[width=0.23\linewidth,height=0.38\textheight,keepaspectratio]{results/eda_seasonal.png}
+\hfill
+\includegraphics[width=0.23\linewidth,height=0.38\textheight,keepaspectratio]{results/eda_heatmap.png}
 
-\vspace{0.03cm}
-
-\includegraphics[width=0.23\linewidth]{results/eda_cluster_map.png}
-\hfill
-\includegraphics[width=0.23\linewidth]{results/eda_seasonal.png}
-\hfill
-\includegraphics[width=0.23\linewidth]{results/eda_heatmap.png}
 \end{frame}
+
+\begin{frame}
+\frametitle{Baseline: Linear Regression}
+
+\begin{columns}[T,onlytextwidth]
+
+\column{0.52\textwidth}
+{\small
+\begin{tabular}{lcc}
+\textbf{Metric} & \textbf{Train} & \textbf{Test} \\
+\hline
+MAE   & 30.71 & 11.18 \\
+RMSE  & 93.52 & 33.01 \\
+$R^2$ & 0.89  & 0.71  \\
+\end{tabular}
+}
+
+\vspace{0.3cm}
+
+{\small
+\begin{itemize}
+  \item \textbf{lag\_24h drives most of the signal} -- without it, test $R^2 = -2.28$; LR has no way to anchor predictions to current demand levels without a direct reference to yesterday.
+  \item \textbf{Non-linearity is the ceiling} -- \texttt{month} enters as a single linear coefficient, so LR cannot distinguish summer rush hours from winter rush hours. This is a gap Tabular models and NNs can close.
+\end{itemize}
+}
+
+\column{0.45\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.65\textheight,keepaspectratio]{results/baseline_pred_vs_actual.png}
+{\tiny Linear Regression -- predicted vs actual (test set).}
+
+\end{columns}
+\end{frame}
+
 
 \begin{frame}
 \frametitle{Slide 4}
