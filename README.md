@@ -96,20 +96,20 @@ Trains a feedforward MLP ([128, 64, 32], dropout=0.2, Softplus output) with earl
 
 ## Feature Schema
 
-| Feature | Type | Description |
-|---|---|---|
-| `cluster_capacity` | continuous | total dock capacity in cluster |
-| `hour_of_day` | int 0-23 | hour of the day |
-| `day_of_week` | int 0-6 | 0 = Monday |
-| `month` | int 1-12 | month of the year |
-| `is_weekend` | binary | day_of_week >= 5 |
-| `is_rush_hour` | binary | 7-9am or 4-6pm on a weekday |
-| `is_holiday` | binary | Ontario statutory holidays 2025-2026 |
-| `temperature_c` | continuous | hourly temperature |
-| `precipitation_mm` | continuous | hourly precipitation |
-| `wind_speed_kmh` | continuous | hourly wind speed |
-| `is_rainy` | binary | precipitation_mm > 0 |
-| `lag_24h` | continuous | actual pickups same cluster, 24 hours prior |
+| # | Feature | Type | Description |
+|---|---|---|---|
+| 1 | `cluster_capacity` | continuous | total dock capacity in cluster |
+| 2 | `hour_of_day` | int 0-23 | hour of the day |
+| 3 | `day_of_week` | int 0-6 | 0 = Monday |
+| 4 | `month` | int 1-12 | month of the year |
+| 5 | `is_weekend` | binary | day_of_week >= 5 |
+| 6 | `is_rush_hour` | binary | 7-9am or 4-6pm on a weekday |
+| 7 | `is_holiday` | binary | Ontario statutory holidays 2025-2026 |
+| 8 | `temperature_c` | continuous | hourly temperature |
+| 9 | `precipitation_mm` | continuous | hourly precipitation |
+| 10 | `wind_speed_kmh` | continuous | hourly wind speed |
+| 11 | `is_rainy` | binary | precipitation_mm > 0 |
+| 12 | `lag_24h` | continuous | actual pickups same cluster, 24 hours prior |
 
 ---
 
@@ -146,4 +146,4 @@ results/                    <- metrics, plots, best params
 
 ## Authors
 
-Abdul Mohammed, Esam Uddin, Axel Tang — University of Toronto ECE
+Abdul Mohammed, Esam Uddin, Axel Tang: University of Toronto ECE
